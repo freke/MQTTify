@@ -2,6 +2,7 @@
 	import { invoke } from '@tauri-apps/api/tauri';
 	import {
 		Modal,
+		Paper,
 		Grid,
 		Stack,
 		Flex,
@@ -17,14 +18,16 @@
 		NumberInput,
 		PasswordInput
 	} from '@svelteuidev/core';
-	import { Plus, Trash, Gear, Rocket } from 'radix-icons-svelte';
+	import { Plus, Trash, Gear, Rocket, Reset, IdCard } from 'radix-icons-svelte';
 	import ConnectionItem from '$lib/ConnectionItem.svelte';
 	import { connections_store, Connection } from '$lib/stores/connections';
-	import { connection_status, connectedhost, connecting } from '$lib/stores/connection_status';
+	import { connection_status, connectedhost, connecting, writableStoreSubscriptions } from '$lib/stores/connection_status';
 
 	let tls = false;
 	let validate = true;
 	let current_connection = $connections_store[0] || new Connection('', 'mqtt://', '', 1883);
+	let advanced = false;
+	let client_id = crypto.randomUUID();
 
 	function newConnection() {
 		current_connection = new Connection('', 'mqtt://', '', 1883);
@@ -47,7 +50,7 @@
 		$connectedhost = current_connection.host;
 		connecting();
 		await invoke('connect', {
-			name: crypto.randomUUID(),
+			name: client_id,
 			host: current_connection.host,
 			port: current_connection.port,
 			username: current_connection.username,
@@ -87,6 +90,62 @@
 						></Title
 					>
 				</Grid.Col>
+				{#if advanced}
+					<Grid.Col span={2}>
+						<TextInput
+							placeholder="Topic"
+							label="Topic"
+						/>
+					</Grid.Col>
+					<Grid.Col span={1}>
+					<NativeSelect data={['0', '1', '2']} label="QoS"/>
+					</Grid.Col>
+					<Grid.Col span={1}>
+						<Button>Add</Button>
+					</Grid.Col>
+					<Grid.Col span={4}>
+					<Paper>
+						<Grid spacing="xs" cols={3}>
+							<Grid.Col span={1}>
+							</Grid.Col>
+							<Grid.Col span={1}>
+								Topic
+							</Grid.Col>
+							<Grid.Col span={1}>
+								QoS
+							</Grid.Col>
+					{#each $writableStoreSubscriptions as subscription}
+						<Grid.Col span={1}>
+						</Grid.Col>
+						<Grid.Col span={1}>
+							{subscription}
+						</Grid.Col>
+						<Grid.Col span={1}>
+						</Grid.Col>
+					{/each}
+						</Grid>
+					</Paper>
+					</Grid.Col>
+					<Grid.Col span={2}>
+					
+						<TextInput
+							label="MQTT Client ID"
+							bind:value={client_id}
+						/>
+					</Grid.Col>
+					<Grid.Col span={1}>
+						<Button variant="outline">
+							<IdCard slot="leftIcon" size={18} />
+							Certificate
+						</Button>
+					</Grid.Col>
+					<Grid.Col span={1}>
+						<Button variant="outline" on:click={() => advanced = !advanced}>
+							<Reset slot="leftIcon" size={18} />
+							Back
+						</Button>
+					</Grid.Col>
+				{:else}
 				<Grid.Col span={2}>
 					<TextInput
 						placeholder="new connection"
@@ -120,23 +179,34 @@
 					<PasswordInput bind:value={current_connection.password} label="Password" />
 				</Grid.Col>
 				<Grid.Col span={4}>
-					<Flex justify="space-between" wrap="nowrap"
-						><Group
-							><Button variant="outline" on:click={deleteConnection}
-								><Trash slot="leftIcon" size={18} />Delete</Button
-							><Button variant="outline"><Gear slot="leftIcon" size={18} />Advanced</Button></Group
-						><Group
-							><Button ripple on:click={saveConnection}>Save</Button>
+					<Flex justify="space-between" wrap="nowrap">
+						<Group>
+							<Button variant="outline" on:click={deleteConnection}>
+								<Trash slot="leftIcon" size={18} />
+								Delete
+							</Button>
+							<Button variant="outline" on:click={() => advanced = !advanced}>
+								<Gear slot="leftIcon" size={18} />
+								Advanced
+							</Button>
+						</Group>
+						<Group>
+							<Button ripple on:click={saveConnection}>
+								Save
+							</Button>
 							<Button
 								on:click={connect}
 								variant="default"
 								loading={$connection_status.connecting}
 								loaderProps={{ size: 'sm', variant: 'circle' }}
-								><Rocket slot="leftIcon" />Connect</Button
-							></Group
-						></Flex
-					>
+								>
+								<Rocket slot="leftIcon" />
+								Connect
+							</Button>
+						</Group>
+					</Flex>
 				</Grid.Col>
+				{/if}
 			</Grid>
 		</Grid.Col>
 	</Grid>

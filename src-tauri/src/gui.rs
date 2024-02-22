@@ -121,18 +121,17 @@ async fn connect(
 }
 
 #[tauri::command]
-async fn subscribe(state: tauri::State<'_, State>) -> Result<()> {
+async fn subscribe(state: tauri::State<'_, State>, subscriptions: Vec<String>) -> Result<()> {
     let client = state.client.lock().await;
     match &client.as_ref().unwrap().client {
         Some(connection) => {
-            info!("subscribe #");
-            connection.subscribe("#", QoS::AtMostOnce).await.unwrap();
-            info!("subscribe $SYS/#");
-            connection.subscribe("$SYS/#", QoS::AtMostOnce).await.unwrap();
+            for subscription in subscriptions {
+                info!("subscribe {}", subscription);
+                connection.subscribe(subscription, QoS::AtMostOnce).await.unwrap();
+            }
         }
         None => {}
     }
-    
     Ok(())
 }
 

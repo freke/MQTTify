@@ -1,4 +1,4 @@
-import { readonly, writable } from 'svelte/store';
+import { readonly, writable, get } from 'svelte/store';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
 import { addToast } from './toasts';
@@ -34,9 +34,10 @@ export function connecting() {
 	writableStore.set({ connected: false, connecting: true, health: ConnectionHealth.CONNECTING });
 }
 
+export const writableStoreSubscriptions = writable<String[]>(["#", "$SYS/#"]);
 function connected() {
 	clearTimeout(timer);
-	invoke('subscribe', {});
+	invoke('subscribe', {subscriptions: get(writableStoreSubscriptions)});
 	writableStore.set({ connected: true, connecting: false, health: ConnectionHealth.OK });
 	timer = setTimeout(function () {
 		writableStore.set({ connected: true, connecting: false, health: ConnectionHealth.UNSTABLE });
