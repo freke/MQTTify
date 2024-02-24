@@ -13,3 +13,6 @@ install:
 
 test:
 	pnpm test
+
+clean:
+	pnpm store prune
