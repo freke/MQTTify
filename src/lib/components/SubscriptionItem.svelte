@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { subscriptions, type Subscription } from "$lib/stores/connections.svelte";
+	import { QoS, type Subscription } from "$lib/stores/connections.svelte";
 
     let {
         subscription,
@@ -14,6 +14,6 @@
     <td>
         {subscription.topic}
     </td>
-    <td>{subscription.qos}
+    <td>{QoS[subscription.qos]}
     </td>
 </tr>

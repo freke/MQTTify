@@ -1,8 +1,11 @@
 <script lang="ts">
-    import { invoke } from '@tauri-apps/api/tauri';
-    import { new_connection, connections, subscriptions, new_subscription, Protocols, QoS, type Subscription } from '$lib/stores/connections.svelte';
+    import { new_connection, connections, subscriptions, new_subscription, Protocols, QoS, type Subscription, type ConnectionOptions } from '$lib/stores/connections.svelte';
     import ConnectionItem from './ConnectionItem.svelte';
 	import SubscriptionItem from './SubscriptionItem.svelte';
+
+    let {
+        onconnect
+    } = $props<{onconnect: (connection: ConnectionOptions) => void }>();
 
     function addConnection() {
         current_connection = new_connection('', Protocols.MQTT, '', 1883);
@@ -19,13 +22,7 @@
 	}
 
     async function connect() {
-		await invoke('connect', {
-			name: client_id,
-			host: current_connection.host,
-			port: current_connection.port,
-			username: current_connection.username,
-			password: current_connection.password
-		});
+        onconnect(current_connection);
 	}
 
     function selected(id: string) {
@@ -47,7 +44,6 @@
     let connections_store = connections();
     let current_connection = $state(connections_store.connections[0] || new_connection('', Protocols.MQTT, '', 1883));
     let advanced =  $state(false);
-    let client_id =  $state(crypto.randomUUID());
     let subscriptions_store = $derived(subscriptions(current_connection));
     let topic = $state("");
     let qos = $state(QoS.AtLeastOnce);
@@ -77,8 +73,8 @@
                 <td>
                     <label for="qos">QoS</label>
                     <select id="qos" bind:value={qos}>
-                        {#each Object.values(QoS).filter((v) => isNaN(Number(v))) as qos}
-                        <option value={qos}>{qos}</option>
+                        {#each Object.values(QoS).filter((v) => isNaN(Number(v))) as qos }
+                        <option value={QoS[qos]}>{qos}</option>
                         {/each}
                     </select>
                 </td>
@@ -89,7 +85,7 @@
         </tbody>
     </table>
     <label for="client_id">MQTT Client ID</label>
-    <input id="client_id" bind:value={client_id}/>
+    <input id="client_id" bind:value={current_connection.client_id}/>
     <button>Certificate</button>
     <button onclick={() => advanced = !advanced}>Back</button>
 {:else}

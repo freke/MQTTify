@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { type Connection } from '$lib/stores/connections.svelte';
+    import { type ConnectionOptions } from '$lib/stores/connections.svelte';
 
     let {
         connection,
         onselect
-    } = $props<{connection: Connection, onselect: (e: string) => void}>();
+    } = $props<{connection: ConnectionOptions, onselect: (e: string) => void}>();
 
     function select() {
         onselect(connection.id);

@@ -72,9 +72,15 @@ async fn async_process_model(
                     }
                 }                
             }
-            Ok(rumqttc::Event::Incoming(rumqttc::Packet::ConnAck(_conn_ack))) => {
-                info!("Connected...");
-                let _ = output_tx.send(gui::Event::Connected).await;
+            Ok(rumqttc::Event::Incoming(rumqttc::Incoming::ConnAck(ack))) => {
+                if ack.code == rumqttc::ConnectReturnCode::Success {
+                    info!("Successfully connected to mqtt broker");
+                    let _ = output_tx.send(gui::Event::Connected).await;
+                } else {
+                    error!("Could not connect to mqtt broker: {:?}", ack.code);
+                    let _ = output_tx.send(gui::Event::Error( Error { error: Some(format!("Could not connect to mqtt broker: {:?}", ack.code)) } )).await;
+                    tokio::time::sleep(Duration::from_secs(5)).await;
+                }
             }
             Ok(rumqttc::Event::Incoming(rumqttc::Packet::PingReq)) => {
                 info!("Ping...");
@@ -105,10 +111,12 @@ async fn async_process_model(
             Err(rumqttc::ConnectionError::MqttState(state_err)) => {
                 error!(?state_err, "State error");
                 let _ = output_tx.send(gui::Event::Error( Error { error: Some(format!("{:?}", state_err)) } )).await;
+                tokio::time::sleep(Duration::from_secs(5)).await;
             }
             Err(err) => {
                 error!(?err, "unhandled error");
                 let _ = output_tx.send(gui::Event::Error( Error { error: Some(format!("{:?}", err)) } )).await;
+                tokio::time::sleep(Duration::from_secs(5)).await;
             }
         }
     }

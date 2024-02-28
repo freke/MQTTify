@@ -4,21 +4,23 @@ export enum Protocols {
     MQTT = 'mqtt://'
 }
 
-export type Connection = {
+export type ConnectionOptions = {
     id: string,
+    client_id: string,
     name: string,
     protocol: Protocols,
     host: string,
     port: number,
     username?: string,
     password?: string,
-    subscripptions: Subscription[]
+    subscripptions: Subscription[],
+    keepalive: number
 }
 
 export enum QoS {
-    AtMostOnce = 'AtMostOnce',
-    AtLeastOnce = 'AtLeastOnce',
-    ExactlyOnce = 'ExactlyOnce'
+    AtMostOnce,
+    AtLeastOnce,
+    ExactlyOnce
 }
 
 export type Subscription = {
@@ -27,17 +29,19 @@ export type Subscription = {
     qos: QoS
 }
 
-export function new_connection(name: string, protocol: Protocols, host: string, port: number): Connection {
+export function new_connection(name: string, protocol: Protocols, host: string, port: number): ConnectionOptions {
     return {
         id: crypto.randomUUID(),
+        client_id: crypto.randomUUID(),
         name: name,
         protocol: protocol,
         host: host,
         port: port,
         subscripptions: [
-            new_subscription("#", QoS.AtLeastOnce),
-            new_subscription("$SYS/#", QoS.AtLeastOnce)
-        ]
+            new_subscription("#", QoS.AtMostOnce),
+            new_subscription("$SYS/#", QoS.AtMostOnce)
+        ],
+        keepalive: 0
     };
 }
 
@@ -45,7 +49,7 @@ export function new_subscription(topic: string, qos: QoS): Subscription {
     return { id: crypto.randomUUID(), topic: topic, qos: qos };
 }
 
-export function connection(initial: Connection) {
+export function connection(initial: ConnectionOptions) {
     let connection = $state({ connection: initial });
     return connection;
 }
@@ -65,16 +69,16 @@ if (localStorage.getItem(key) === null) {
         )
     ); // initialize local storage with initial value
 }
-const connections_state: Connection[] = $state(JSON.parse(localStorage.getItem(key) || '[]'));
+const connections_state: ConnectionOptions[] = $state(JSON.parse(localStorage.getItem(key) || '[]'));
 
 export function connections() {
     return {
         get connections() { return unstate(connections_state) },
-        add: (connection: Connection) => {
+        add: (connection: ConnectionOptions) => {
             connections_state.push(unstate(connection));
             localStorage.setItem(key, JSON.stringify(connections_state, null, 2));
         },
-        save: (connection: Connection) => {
+        save: (connection: ConnectionOptions) => {
             const i = connections_state.findIndex((obj) => obj.id === connection.id);
             if(i < 0) {
                 connections_state.push(unstate(connection));
@@ -83,7 +87,7 @@ export function connections() {
             }
             localStorage.setItem(key, JSON.stringify(connections_state, null, 2));
         },
-        delete: (connection: Connection) => {
+        delete: (connection: ConnectionOptions) => {
             connections_state.forEach((item, index) => {
                 if (item.id === connection.id) connections_state.splice(index, 1);
             });
@@ -92,7 +96,7 @@ export function connections() {
     }
 }
 
-export function subscriptions(connection: Connection) {
+export function subscriptions(connection: ConnectionOptions) {
     return {
         get subscriptions() { return unstate(connection.subscripptions) },
         add: (subscription: Subscription) => {

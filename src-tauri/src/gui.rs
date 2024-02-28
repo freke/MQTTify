@@ -4,6 +4,8 @@ use tauri::{Manager, Result};
 use tokio::sync::{mpsc, Mutex};
 use tracing::info;
 use std::sync::Arc;
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::mqtt;
 
@@ -74,6 +76,7 @@ async fn connect(
     username: Option<String>,
     password: Option<String>,
 ) -> Result<()> {
+    info!("Connecting...");
     let (async_proc_output_tx, mut async_proc_output_rx): (
         mpsc::Sender<Event>,
         mpsc::Receiver<Event>,
@@ -120,14 +123,27 @@ async fn connect(
     Ok(())
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Subscription {
+    pub topic: String,
+    pub qos: u8,
+}
+
 #[tauri::command]
-async fn subscribe(state: tauri::State<'_, State>, subscriptions: Vec<String>) -> Result<()> {
+async fn subscribe(state: tauri::State<'_, State>, subscriptions: Vec<Subscription>) -> Result<()> {
+    info!("Subscribe...");
     let client = state.client.lock().await;
     match &client.as_ref().unwrap().client {
         Some(connection) => {
             for subscription in subscriptions {
-                info!("subscribe {}", subscription);
-                connection.subscribe(subscription, QoS::AtMostOnce).await.unwrap();
+                info!("subscribe {:?}", subscription);
+                let qos = match subscription.qos {
+                    0 => QoS::AtMostOnce,
+                    1 => QoS::AtLeastOnce,
+                    2 => QoS::ExactlyOnce,
+                    _ => panic!("QoS is invalid")
+                };
+                connection.subscribe(subscription.topic, qos ).await.unwrap();
             }
         }
         None => {}
