@@ -7,6 +7,7 @@
 	import { listen } from '@tauri-apps/api/event';
 	import { Topic } from "$lib/stores/topics_tree.svelte"
 	import TopicInfo from '$lib/components/TopicInfo.svelte';
+	import Publish from '$lib/components/Publish.svelte';
 
 
 	let current_connection = connection_status();
@@ -49,6 +50,13 @@
 		}
 	}
 
+	function publish(topic: string, payload: string) {
+		invoke('publish', {
+			topic: topic,
+			payload: payload
+		})
+	}
+
 	function got_ping() {
 		clearTimeout(timer);
 		current_connection.connection_health = ConnectionHealth.OK;
@@ -61,6 +69,7 @@
 
 	function disconnected() {
 		clearTimeout(timer);
+		selected_topic = undefined;
 		current_connection.connection_status = ConnecitonStatus.OFFLINE;
 		current_connection.connection_health = ConnectionHealth.OK;
 	}
@@ -110,6 +119,8 @@
 
 {#if current_connection.connection_status == ConnecitonStatus.CONNECTED}
 <button onclick={disconnect}>Disconnect</button>
+<h2>Publish</h2>
+<Publish onpublish={publish} />
 {#if selected_topic}
 <h2>Topic</h2>
 <button onclick={() => selected_topic=undefined }>Close</button>
