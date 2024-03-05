@@ -15,4 +15,6 @@ test:
 	pnpm test
 
 clean:
+	-rm -Rf ./src-tauri/target
+	-rm -Rf ./src-tauri/test-results
 	pnpm store prune

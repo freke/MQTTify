@@ -1,10 +1,10 @@
 [package]
 name = "app"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+description = "MQTT client"
+authors = ["David AAberg"]
+license = "GPLv3"
+repository = "https://github.com/freke/MQTTify"
 default-run = "app"
 edition = "2021"
 rust-version = "1.60"

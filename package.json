@@ -1,6 +1,6 @@
 {
-	"name": "mqttify5",
-	"version": "0.0.1",
+	"name": "mqttify",
+	"version": "0.1.0",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -44,5 +44,14 @@
 		"radix-icons-svelte": "^1.2.1",
 		"ring-buffer-ts": "^1.2.0",
 		"svelte-grid-extended": "^1.1.4"
+	},
+	"prettier": {
+		"useTabs": true,
+		"printWidth": 100,
+		"semi": false,
+		"singleQuote": true,
+		"plugins": [
+			"prettier-plugin-svelte"
+		]
 	}
 }

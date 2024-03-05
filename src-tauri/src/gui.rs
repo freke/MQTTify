@@ -101,8 +101,8 @@ async fn connect(
                 .name("message_buffer".to_owned())
                 .accumulator(|c, e| c.push(e))
                 .consumer(consumer)
-                .max_len(10000)
-                .interval(Duration::from_millis(500))
+                .max_len(1000)
+                .interval(Duration::from_millis(300))
                 .build();
     
         loop {
