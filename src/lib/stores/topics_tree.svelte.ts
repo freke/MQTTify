@@ -28,7 +28,7 @@ export class Topic {
 		if (topic_index < 0) {
 			sub_topic = new Topic(remaining_topic_path[0])
 			this._sub_topics.push(sub_topic)
-			this._sub_topics.sort((a, b) => ((a.topic || '') > (b.topic || '') ? 1 : -1))
+			//this._sub_topics.sort((a, b) => ((a.topic || '') > (b.topic || '') ? 1 : -1))
 		} else {
 			sub_topic = this._sub_topics[topic_index]
 		}

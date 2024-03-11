@@ -1,4 +1,4 @@
-use rumqttc::{AsyncClient, EventLoop, MqttOptions};
+use rumqttc::{AsyncClient, EventLoop, MqttOptions, Transport, TlsConfiguration};
 use tokio::sync::mpsc;
 use tracing::{debug, info, error};
 use std::time::Duration;
@@ -11,24 +11,34 @@ pub struct MqttConnection {
     pub client: Option<AsyncClient>,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Credentials {
     pub username: Option<String>,
     pub password: Option<String>
 }
 
+#[derive(Debug)]
 pub struct Options {
-    pub credentials : Credentials
+    pub credentials : Credentials,
+    pub validate_tls : bool,
+    pub tls : bool
 }
 
 pub fn connect(name: String, host: String, port: u16, options: Options, async_proc_output_tx: mpsc::Sender<gui::Event>) -> AsyncClient {
-    info!(?name, ?host, ?port, "Connecting...");
+    info!(?name, ?host, ?port, ?options, "Connecting...");
     let mut mqttoptions = MqttOptions::new(name, &host, port);
     //mqttoptions.set_keep_alive(Duration::from_secs(5));
     mqttoptions.set_keep_alive(Duration::from_secs(0));
     if options.credentials.username != None && options.credentials.password != None {
         info!("Logging in with username and password...");
         mqttoptions.set_credentials(options.credentials.username.unwrap(), options.credentials.password.unwrap());
+    }
+    if !options.validate_tls {
+
+    }
+    if options.tls {
+        info!("Using TLS...");
+        mqttoptions.set_transport(Transport::tls_with_default_config());
     }
     mqttoptions.set_max_packet_size(usize::MAX, usize::MAX);
     info!("{:?}", mqttoptions.keep_alive());

@@ -73,6 +73,8 @@ async fn connect(
     name: String,
     host: String,
     port: u16,
+    tls: bool,
+    validate_tls: bool,
     username: Option<String>,
     password: Option<String>,
 ) -> Result<()> {
@@ -83,7 +85,7 @@ async fn connect(
     ) = mpsc::channel(1);
     let credentials = mqtt::Credentials { username, password };
 
-    let options = mqtt::Options { credentials };
+    let options = mqtt::Options { credentials, validate_tls, tls };
     let client = mqtt::connect(name, host, port, options, async_proc_output_tx);
 
     *state.client.lock().await = Some(mqtt::MqttConnection {

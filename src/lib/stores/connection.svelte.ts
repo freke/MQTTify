@@ -20,7 +20,7 @@ type Connection = {
 export function connection_status(): Connection {
 	const connection_status = $state({
 		connection_status: ConnecitonStatus.OFFLINE,
-		connection_health: ConnectionHealth.OK,
+		connection_health: ConnectionHealth.OK
 	})
 	return connection_status
 }

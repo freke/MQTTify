@@ -48,8 +48,6 @@
 		subscriptions_store.delete(subscription)
 	}
 
-	let tls = $state(false)
-	let validate = $state(true)
 	let connections_store = connections()
 	let current_connection = $state(
 		connections_store.connections[0] || new_connection('', Protocols.MQTT, '', 1883),
@@ -106,10 +104,12 @@
 	{:else}
 		<label for="name">Name</label>
 		<input id="name" bind:value={current_connection.name} />
-		<label for="cert_validate">Validate certificate</label>
-		<input type="checkbox" id="cert_validate" bind:checked={validate} />
 		<label for="tls">Encryption (tls)</label>
-		<input type="checkbox" id="tls" bind:checked={tls} />
+		<input type="checkbox" id="tls" bind:checked={current_connection.tls} />
+		<label for="cert_validate">Validate certificate</label>
+		<input type="checkbox" id="cert_validate" bind:checked={current_connection.validate} disabled={!current_connection.tls}/>
+		<label for="disabled">disabled</label>
+		<input type="checkbox" id="disabled" disabled/>
 		<label for="protocol">Protocol</label>
 		<select id="protocol">
 			{#each Object.entries(Protocols) as [protocol, protocol_name]}
