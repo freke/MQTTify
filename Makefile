@@ -12,9 +12,14 @@ install:
 	pnpm install
 
 test:
+	pnpm exec playwright install
 	pnpm test
 
 clean:
 	-rm -Rf ./src-tauri/target
 	-rm -Rf ./src-tauri/test-results
 	pnpm store prune
+
+update:
+	pnpm update
+	cd src-tauri; cargo update

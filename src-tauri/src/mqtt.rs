@@ -1,4 +1,4 @@
-use rumqttc::{AsyncClient, EventLoop, MqttOptions, Transport, TlsConfiguration};
+use rumqttc::{AsyncClient, EventLoop, MqttOptions, Transport};
 use tokio::sync::mpsc;
 use tracing::{debug, info, error};
 use std::time::Duration;
@@ -20,29 +20,25 @@ pub struct Credentials {
 #[derive(Debug)]
 pub struct Options {
     pub credentials : Credentials,
-    pub validate_tls : bool,
-    pub tls : bool
+    pub use_secure_mqtt : bool,
+    pub keep_alive : u64,
 }
 
 pub fn connect(name: String, host: String, port: u16, options: Options, async_proc_output_tx: mpsc::Sender<gui::Event>) -> AsyncClient {
     info!(?name, ?host, ?port, ?options, "Connecting...");
     let mut mqttoptions = MqttOptions::new(name, &host, port);
-    //mqttoptions.set_keep_alive(Duration::from_secs(5));
-    mqttoptions.set_keep_alive(Duration::from_secs(0));
-    if options.credentials.username != None && options.credentials.password != None {
+    mqttoptions.set_keep_alive(Duration::from_secs(options.keep_alive));
+    if let (Some(username), Some(password)) = (options.credentials.username, options.credentials.password) {
         info!("Logging in with username and password...");
-        mqttoptions.set_credentials(options.credentials.username.unwrap(), options.credentials.password.unwrap());
+        mqttoptions.set_credentials(username, password);
     }
-    if !options.validate_tls {
-
-    }
-    if options.tls {
+    if options.use_secure_mqtt {
         info!("Using TLS...");
         mqttoptions.set_transport(Transport::tls_with_default_config());
     }
     mqttoptions.set_max_packet_size(usize::MAX, usize::MAX);
-    info!("{:?}", mqttoptions.keep_alive());
-    info!("{:?}", mqttoptions.manual_acks());
+    info!("Keep alive {:?}", mqttoptions.keep_alive());
+    info!("Manual acks{:?}", mqttoptions.manual_acks());
     let (client, mut eventloop) = AsyncClient::new(mqttoptions, 10);
     eventloop.network_options.set_connection_timeout(15);
 
@@ -50,7 +46,7 @@ pub fn connect(name: String, host: String, port: u16, options: Options, async_pr
         async_process_model(eventloop, async_proc_output_tx).await;
     });
 
-    return client;
+    client
 }
 
 async fn async_process_model(

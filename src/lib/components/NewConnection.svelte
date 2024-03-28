@@ -104,14 +104,8 @@
 	{:else}
 		<label for="name">Name</label>
 		<input id="name" bind:value={current_connection.name} />
-		<label for="tls">Encryption (tls)</label>
-		<input type="checkbox" id="tls" bind:checked={current_connection.tls} />
-		<label for="cert_validate">Validate certificate</label>
-		<input type="checkbox" id="cert_validate" bind:checked={current_connection.validate} disabled={!current_connection.tls}/>
-		<label for="disabled">disabled</label>
-		<input type="checkbox" id="disabled" disabled/>
 		<label for="protocol">Protocol</label>
-		<select id="protocol">
+		<select id="protocol" bind:value={current_connection.protocol}>
 			{#each Object.entries(Protocols) as [protocol, protocol_name]}
 				<option value={protocol}>{protocol_name}</option>
 			{/each}

@@ -151,21 +151,21 @@ test('a/b|c', async () => {
 	const sub_topics_a = topic_a.sub_topics()
 	expect(sub_topics_a.length).toBe(2)
 
-	const topic_b = sub_topics_a[0]
-	expect(topic_b.topic).toBe('b')
-	const sub_topics_b = topic_b.sub_topics()
-	expect(sub_topics_b.length).toBe(0)
+	const topic_b = sub_topics_a.find((e) => e.topic === 'b')
+	expect(topic_b?.topic).toBe('b')
+	const sub_topics_b = topic_b?.sub_topics()
+	expect(sub_topics_b?.length).toBe(0)
 
-	const topic_c = sub_topics_a[1]
-	expect(topic_c.topic).toBe('c')
-	const sub_topics_c = topic_c.sub_topics()
-	expect(sub_topics_c.length).toBe(0)
-	expect(topic_c.payload).toBe('1')
+	const topic_c = sub_topics_a.find((e) => e.topic === 'c')
+	expect(topic_c?.topic).toBe('c')
+	const sub_topics_c = topic_c?.sub_topics()
+	expect(sub_topics_c?.length).toBe(0)
+	expect(topic_c?.payload).toBe('1')
 
 	expect(topic.message_counter()).toBe(2)
 	expect(topic_a.message_counter()).toBe(2)
-	expect(topic_b.message_counter()).toBe(1)
-	expect(topic_c.message_counter()).toBe(1)
+	expect(topic_b?.message_counter()).toBe(1)
+	expect(topic_c?.message_counter()).toBe(1)
 })
 
 test('FCF5C4A08028 FCF5C4A08028/sensor', async () => {

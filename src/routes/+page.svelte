@@ -29,8 +29,8 @@
 			port: current_connection.connection_options.port,
 			username: current_connection.connection_options.username,
 			password: current_connection.connection_options.password,
-			validate: current_connection.connection_options.validate,
-			tls: current_connection.connection_options.tls,
+			protocol: current_connection.connection_options.protocol,
+			keepAlive: 0
 		})
 	}
 

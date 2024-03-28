@@ -1,7 +1,6 @@
-use std::time::Duration;
 use rumqttc::QoS;
 use tauri::{Manager, Result};
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::Mutex;
 use tracing::info;
 use std::sync::Arc;
 use serde::Deserialize;
@@ -35,6 +34,12 @@ pub enum Event {
     Error(Error),
     Publish(Message),
     Ping,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Deserialize)]
+enum Protocol {
+    MQTT,
+    MQTTS,
 }
 
 #[derive(Default)]
@@ -73,51 +78,49 @@ async fn connect(
     name: String,
     host: String,
     port: u16,
-    tls: bool,
-    validate_tls: bool,
     username: Option<String>,
     password: Option<String>,
+    protocol: Protocol,
+    keep_alive: u64,
 ) -> Result<()> {
     info!("Connecting...");
     let (async_proc_output_tx, mut async_proc_output_rx): (
-        mpsc::Sender<Event>,
-        mpsc::Receiver<Event>,
-    ) = mpsc::channel(1);
+        tokio::sync::mpsc::Sender<Event>,
+        tokio::sync::mpsc::Receiver<Event>,
+    ) = tokio::sync::mpsc::channel(1);
     let credentials = mqtt::Credentials { username, password };
-
-    let options = mqtt::Options { credentials, validate_tls, tls };
+    let use_secure_mqtt = protocol == Protocol::MQTTS;
+    let options = mqtt::Options { credentials, use_secure_mqtt, keep_alive };
     let client = mqtt::connect(name, host, port, options, async_proc_output_tx);
 
     *state.client.lock().await = Some(mqtt::MqttConnection {
         client: Some(client),
     });
 
+    let h = Arc::new(app_handle.clone());
+
     tauri::async_runtime::spawn(async move {
-        let h = Arc::new(app_handle.clone());
         let consumer = Box::new(move |message| {            
             send_mqtt_message(message, &*h);
         });
-        // let consumer = Box::new(|message| info!("{:?}", message));
         let message_buffer: buffer_trigger_async::Simple<Message, Vec<Message>> =
             buffer_trigger_async::SimpleBuilder::builder(Vec::default)
                 .name("message_buffer".to_owned())
                 .accumulator(|c, e| c.push(e))
                 .consumer(consumer)
                 .max_len(1000)
-                .interval(Duration::from_millis(300))
+                .interval(tokio::time::Duration::from_millis(300))
                 .build();
     
-        loop {
-            if let Some(output) = async_proc_output_rx.recv().await {
-                match output {
-                    Event::Publish(message) => {
-                        message_buffer.push(message).await;
-                    },
-                    _ => {
-                        info!("{:?}", output);
-                        rs2js(output, &app_handle);
-                    },
-                }
+        while let Some(output) = async_proc_output_rx.recv().await {
+            match output {
+                Event::Publish(message) => {
+                    message_buffer.push(message).await;
+                },
+                _ => {
+                    info!("{:?}", output);
+                    rs2js(output, &app_handle);
+                },
             }
         }
     });

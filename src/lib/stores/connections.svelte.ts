@@ -2,6 +2,7 @@ import { unstate } from 'svelte'
 
 export enum Protocols {
 	MQTT = 'mqtt://',
+	MQTTS = 'mqtts://',
 }
 
 export type ConnectionOptions = {
@@ -15,8 +16,6 @@ export type ConnectionOptions = {
 	password?: string
 	subscripptions: Subscription[]
 	keepalive: number
-	validate: boolean
-	tls: boolean
 }
 
 export enum QoS {
@@ -49,8 +48,6 @@ export function new_connection(
 			new_subscription('$SYS/#', QoS.AtMostOnce),
 		],
 		keepalive: 0,
-		validate: true,
-		tls: false
 	}
 }
 
